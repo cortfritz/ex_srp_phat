@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  EX_SRP_PHAT_BUILD: "1"
+
+jobs:
+  test-linux:
+    name: mix test (ubuntu)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: "28.5"
+          elixir-version: "1.20.0"
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+            native/srp_phat/target
+          key: ${{ runner.os }}-mix-${{ hashFiles('mix.lock', 'native/srp_phat/Cargo.lock') }}
+
+      - run: mix deps.get
+      - run: mix compile --warnings-as-errors
+      - run: mix format --check-formatted
+      - run: mix test
+
+  test-macos:
+    name: mix test (macos)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Elixir
+        run: brew install elixir
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+            native/srp_phat/target
+          key: ${{ runner.os }}-mix-${{ hashFiles('mix.lock', 'native/srp_phat/Cargo.lock') }}
+
+      - run: mix local.hex --force && mix local.rebar --force
+      - run: mix deps.get
+      - run: mix compile --warnings-as-errors
+      - run: mix test
+
+  rust-lint:
+    name: cargo fmt + clippy + test (native)
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: native/srp_phat
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test

@@ -1,0 +1,7 @@
+# musl targets default to a statically-linked CRT, which cannot produce a
+# cdylib; NIFs are shared libraries, so opt back into dynamic CRT linkage.
+[target.x86_64-unknown-linux-musl]
+rustflags = ["-C", "target-feature=-crt-static"]
+
+[target.aarch64-unknown-linux-musl]
+rustflags = ["-C", "target-feature=-crt-static"]

@@ -1,0 +1,29 @@
+[package]
+name = "srp_phat"
+version = "0.1.0"
+edition = "2021"
+authors = ["Cort Fritz"]
+description = "Rustler NIF: GCC-PHAT -> SRP-PHAT acoustic source localization"
+license = "MIT"
+publish = false
+
+[lib]
+name = "srp_phat"
+crate-type = ["cdylib"]
+
+[dependencies]
+rustler = "0.38"
+rustfft = "6.4"
+realfft = "3.5"
+ndarray = { version = "0.17", features = ["rayon"] }
+rayon = "1"
+
+[features]
+default = []
+nif_version_2_15 = ["rustler/nif_version_2_15"]
+nif_version_2_16 = ["rustler/nif_version_2_16"]
+nif_version_2_17 = ["rustler/nif_version_2_17"]
+
+[profile.release]
+opt-level = 3
+lto = "thin"
